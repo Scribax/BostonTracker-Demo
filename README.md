@@ -116,7 +116,7 @@ Boston Tracker es un **sistema integral de gestión de deliveries** que incluye:
 
 ---
 
-## 🏗️ **Proyecto Completo (Repositorio Principal)**
+## 🏗️ **Proyecto Completo**
 
 Esta demo es parte de un **ecosistema completo** de desarrollo:
 
@@ -137,14 +137,6 @@ Esta demo es parte de un **ecosistema completo** de desarrollo:
 - **GPS tracking** nativo
 - **Push notifications**
 - **Offline capabilities**
-
----
-
-## 🔗 **Enlaces Relacionados**
-
-- 🌟 **[Demo en Vivo](https://scribax.github.io/BostonTracker-Demo/)**
-- 💻 **[Repositorio Principal](https://github.com/Scribax/BostonTracker)** (código completo)
-- 📧 **Contacto**: franco@bostonburgers.com
 
 ---
 
@@ -182,7 +174,7 @@ Esta demo está diseñada para:
 ## 📞 **Contacto del Desarrollador**
 
 **Franco - Boston Tracker Developer**  
-📧 **Email**: franco@bostonburgers.com  
+📧 **Email**: francodemartosworks@gmail.com  
 🐙 **GitHub**: [@Scribax](https://github.com/Scribax)  
 🌐 **Demo**: [scribax.github.io/BostonTracker-Demo](https://scribax.github.io/BostonTracker-Demo/)
 
