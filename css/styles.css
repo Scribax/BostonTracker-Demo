@@ -90,7 +90,7 @@ body {
   100% { opacity: 1; }
 }
 
-/* Dashboard Main */
+/* Dashboard Main - DEFAULT DESKTOP */
 .dashboard-main {
   height: calc(100vh - 140px);
   display: flex;
@@ -137,18 +137,16 @@ body {
   border-radius: 2px 2px 0 0;
 }
 
-/* Map Container */
+/* Map Container - DEFAULT DESKTOP */
 .map-container {
   flex: 1;
   position: relative;
   background: #e9ecef;
-  min-height: 400px;
 }
 
 #map {
   width: 100%;
   height: 100%;
-  min-height: 400px;
   z-index: 1;
 }
 
@@ -178,7 +176,7 @@ body {
   font-weight: 500;
 }
 
-/* Deliveries Sidebar */
+/* Deliveries Sidebar - DEFAULT DESKTOP */
 .deliveries-sidebar {
   width: 400px;
   background: var(--boston-white);
@@ -436,28 +434,28 @@ body {
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
-/* Responsive Design */
+/* === RESPONSIVE DESIGN === */
+
+/* Tablet/Small Desktop - 993px to 1199px works fine with default layout */
+
+/* Large Tablet - 769px to 992px */
 @media (max-width: 992px) {
   .dashboard-main {
     flex-direction: column !important;
+    height: calc(100vh - 140px);
+  }
+  
+  .map-container {
+    height: calc(60vh) !important;
+    order: 1;
   }
   
   .deliveries-sidebar {
     width: 100% !important;
-    height: 250px;
+    height: calc(40vh - 60px);
     border-left: none;
     border-top: 1px solid #dee2e6;
     order: 2;
-  }
-  
-  .map-container {
-    height: calc(100vh - 350px) !important;
-    min-height: 350px;
-    order: 1;
-  }
-
-  #map {
-    min-height: 350px;
   }
 
   .dashboard-tabs .nav-link {
@@ -466,10 +464,25 @@ body {
   }
 }
 
+/* Mobile Large - 577px to 768px */
 @media (max-width: 768px) {
+  .dashboard-main {
+    height: calc(100vh - 120px);
+  }
+  
+  .map-container {
+    height: calc(55vh) !important;
+    min-height: 300px;
+  }
+
+  #map {
+    min-height: 300px;
+  }
+
   .deliveries-sidebar {
+    height: calc(45vh - 120px);
+    min-height: 200px;
     padding: 0.75rem;
-    height: 200px;
   }
   
   .container-fluid {
@@ -479,22 +492,29 @@ body {
   .dashboard-brand {
     font-size: 1.25rem;
   }
+}
 
+/* Mobile Small - up to 576px */
+@media (max-width: 576px) {
+  .dashboard-main {
+    height: calc(100vh - 100px);
+  }
+  
   .map-container {
-    height: calc(100vh - 300px) !important;
-    min-height: 300px;
+    height: calc(50vh) !important;
+    min-height: 280px;
   }
 
   #map {
-    min-height: 300px;
+    min-height: 280px;
   }
 
-  .dashboard-main {
-    height: calc(100vh - 120px);
+  .deliveries-sidebar {
+    height: calc(50vh - 100px);
+    min-height: 180px;
+    padding: 0.5rem;
   }
-}
 
-@media (max-width: 576px) {
   .dashboard-tabs .nav-link {
     padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
@@ -504,26 +524,8 @@ body {
     display: none;
   }
   
-  .deliveries-sidebar {
-    height: 180px;
-    padding: 0.5rem;
-  }
-  
   .demo-badge {
     display: none;
-  }
-
-  .map-container {
-    height: calc(100vh - 280px) !important;
-    min-height: 280px;
-  }
-
-  #map {
-    min-height: 280px;
-  }
-
-  .dashboard-main {
-    height: calc(100vh - 100px);
   }
 
   .container-fluid {
@@ -531,17 +533,15 @@ body {
   }
 }
 
-/* Force map to be visible on mobile */
-@media (max-width: 768px) {
-  .leaflet-container {
-    width: 100% !important;
-    height: 100% !important;
-  }
-  
-  .leaflet-map-pane {
-    width: 100% !important;
-    height: 100% !important;
-  }
+/* Force map visibility on all devices */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.leaflet-map-pane {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Loading states */
