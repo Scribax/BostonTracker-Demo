@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boston Tracker - Live Demo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link href="css/styles.css" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg dashboard-navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand dashboard-brand" href="#">
+                <i class="bi bi-geo-alt-fill text-boston-red"></i>
+                <span class="text-boston-red">BOSTON</span> Tracker
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <!-- Connection Status -->
+                <div class="d-flex align-items-center me-4">
+                    <div class="connection-dot bg-success me-2" id="connectionStatus"></div>
+                    <span class="text-muted small" id="connectionText">Conectado</span>
+                </div>
+                
+                <!-- User Info -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-boston-red dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        Admin Demo
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Perfil</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Configuración</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Demo Banner -->
+    <div class="alert alert-info alert-dismissible fade show m-0" role="alert">
+        <div class="container-fluid px-4">
+            <i class="bi bi-info-circle"></i>
+            <strong>Demo en Vivo:</strong> Esta es una demostración estática del dashboard Boston Tracker. Los datos son ficticios y la funcionalidad es limitada para propósitos de presentación.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+
+    <!-- Dashboard Tabs -->
+    <div class="dashboard-tabs">
+        <div class="container-fluid px-4">
+            <ul class="nav nav-tabs border-0" id="dashboardTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tracking-tab" data-bs-toggle="tab" data-bs-target="#tracking" type="button" role="tab">
+                        <i class="bi bi-geo-alt"></i>
+                        Tracking en Tiempo Real
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+                        <i class="bi bi-clock-history"></i>
+                        Historial de Viajes
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="apk-tab" data-bs-toggle="tab" data-bs-target="#apk" type="button" role="tab">
+                        <i class="bi bi-phone"></i>
+                        Gestión APK
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                        <i class="bi bi-people"></i>
+                        Gestión de Usuarios
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content dashboard-main" id="dashboardTabContent">
+        <!-- Tracking Tab -->
+        <div class="tab-pane fade show active" id="tracking" role="tabpanel">
+            <div class="d-flex h-100">
+                <!-- Map Container -->
+                <div class="map-container">
+                    <div id="map" class="w-100 h-100"></div>
+                    
+                    <!-- Map Loading Overlay -->
+                    <div class="map-loading" id="mapLoading">
+                        <div class="loading-spinner">
+                            <div class="spinner-border text-boston-red" role="status">
+                                <span class="visually-hidden">Cargando mapa...</span>
+                            </div>
+                            <div class="loading-text">Cargando mapa...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Deliveries Sidebar -->
+                <div class="deliveries-sidebar">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Deliveries Activos</h5>
+                        <span class="badge bg-boston-red" id="activeCount">0</span>
+                    </div>
+                    
+                    <!-- Search Filter -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Buscar delivery..." id="deliverySearch">
+                    </div>
+                    
+                    <!-- Delivery List -->
+                    <div id="deliveryList" class="delivery-list">
+                        <!-- Deliveries will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-pane fade" id="history" role="tabpanel">
+            <div class="container-fluid p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Historial de Viajes</h4>
+                    <div class="d-flex gap-3">
+                        <input type="date" class="form-control" id="startDate">
+                        <input type="date" class="form-control" id="endDate">
+                        <button class="btn btn-outline-boston-red">
+                            <i class="bi bi-funnel"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Repartidor</th>
+                                        <th>Restaurante</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha</th>
+                                        <th>Duración</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <!-- History data will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APK Management Tab -->
+        <div class="tab-pane fade" id="apk" role="tabpanel">
+            <div class="container-fluid p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Gestión de APK</h4>
+                    <button class="btn btn-boston-red">
+                        <i class="bi bi-upload"></i> Subir Nuevo APK
+                    </button>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="bi bi-phone"></i> Versión Actual</h6>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="text-boston-red">v2.1.3</h5>
+                                <p class="text-muted">Publicada el 15 de Agosto, 2024</p>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Descargas: 247</small>
+                                    <span class="badge bg-success">Activa</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="bi bi-gear"></i> Configuración</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoUpdate" checked>
+                                    <label class="form-check-label" for="autoUpdate">
+                                        Actualización automática
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notifications" checked>
+                                    <label class="form-check-label" for="notifications">
+                                        Notificaciones push
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6>Historial de Versiones</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Versión</th>
+                                        <th>Fecha</th>
+                                        <th>Tamaño</th>
+                                        <th>Descargas</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="apkVersions">
+                                    <!-- APK versions will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Management Tab -->
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <div class="container-fluid p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Gestión de Usuarios</h4>
+                    <button class="btn btn-boston-red" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="bi bi-person-plus"></i> Agregar Usuario
+                    </button>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-boston-red" id="totalUsers">0</h3>
+                                <p class="text-muted">Total Usuarios</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-success" id="activeUsers">0</h3>
+                                <p class="text-muted">Activos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-warning" id="adminUsers">0</h3>
+                                <p class="text-muted">Administradores</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-info" id="deliveryUsers">0</h3>
+                                <p class="text-muted">Repartidores</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6>Lista de Usuarios</h6>
+                            <div class="input-group" style="width: 300px;">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control" placeholder="Buscar usuario..." id="userSearch">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Email</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th>Último Acceso</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Users will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus"></i> Agregar Usuario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nombre de Usuario</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Rol</label>
+                            <select class="form-select" id="role">
+                                <option value="admin">Administrador</option>
+                                <option value="delivery" selected>Repartidor</option>
+                                <option value="manager">Gerente</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-boston-red">
+                        <i class="bi bi-check"></i> Crear Usuario
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/mock-data.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/animations.js"></script>
+</body>
+</html>
