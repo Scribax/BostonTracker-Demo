@@ -10,23 +10,47 @@ class BostonTrackerMap {
 
     async init() {
         try {
+            // Wait for DOM to be ready
+            if (document.readyState !== 'complete') {
+                await new Promise(resolve => window.addEventListener('load', resolve));
+            }
+
             // Hide loading spinner after a delay to simulate loading
             setTimeout(() => {
-                document.getElementById('mapLoading').style.display = 'none';
+                const loadingElement = document.getElementById('mapLoading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
             }, 2000);
 
-            // Initialize Leaflet map
+            // Initialize Leaflet map with mobile-specific options
             this.map = L.map('map', {
                 center: window.mockData.bostonCenter,
                 zoom: 13,
                 zoomControl: true,
-                attributionControl: false
+                attributionControl: false,
+                // Mobile-specific options
+                tap: true,
+                touchZoom: true,
+                dragging: true,
+                scrollWheelZoom: true,
+                doubleClickZoom: true,
+                boxZoom: false,
+                keyboard: false,
+                // Better performance on mobile
+                preferCanvas: false,
+                // Touch interaction improvements
+                maxZoom: 18,
+                minZoom: 10
             });
 
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
+                attribution: '© OpenStreetMap contributors',
+                // Mobile optimizations
+                detectRetina: true,
+                crossOrigin: true
             }).addTo(this.map);
 
             // Add custom attribution
@@ -34,6 +58,33 @@ class BostonTrackerMap {
                 position: 'bottomright',
                 prefix: 'Boston Tracker Demo'
             }).addTo(this.map);
+
+            // Force map invalidation after initialization
+            setTimeout(() => {
+                if (this.map) {
+                    this.map.invalidateSize();
+                }
+            }, 300);
+
+            // Add resize handler for mobile orientation changes
+            window.addEventListener('resize', () => {
+                if (this.map) {
+                    setTimeout(() => {
+                        this.map.invalidateSize();
+                    }, 100);
+                }
+            });
+
+            // Handle orientation change on mobile
+            window.addEventListener('orientationchange', () => {
+                if (this.map) {
+                    setTimeout(() => {
+                        this.map.invalidateSize();
+                        // Re-center map after orientation change
+                        this.map.setView(window.mockData.bostonCenter, this.map.getZoom());
+                    }, 500);
+                }
+            });
 
             this.isInitialized = true;
             
@@ -48,15 +99,20 @@ class BostonTrackerMap {
 
     showMapError() {
         const mapContainer = document.getElementById('map');
-        mapContainer.innerHTML = `
-            <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                <div class="text-center">
-                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3 text-muted">Error al cargar el mapa</h5>
-                    <p class="text-muted">Refresque la página para intentar de nuevo</p>
+        if (mapContainer) {
+            mapContainer.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                    <div class="text-center">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">Error al cargar el mapa</h5>
+                        <p class="text-muted">Refresque la página para intentar de nuevo</p>
+                        <button class="btn btn-boston-red" onclick="location.reload()">
+                            <i class="bi bi-arrow-clockwise"></i> Recargar
+                        </button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
 
     updateDeliveries(deliveries) {
@@ -76,7 +132,9 @@ class BostonTrackerMap {
         // Fit map to show all markers if there are any
         if (deliveries.length > 0) {
             const group = new L.featureGroup(Array.from(this.markers.values()));
-            this.map.fitBounds(group.getBounds().pad(0.1));
+            if (group.getBounds().isValid()) {
+                this.map.fitBounds(group.getBounds().pad(0.1));
+            }
         }
     }
 
@@ -89,9 +147,9 @@ class BostonTrackerMap {
         const iconColor = this.getStatusColor(delivery.status);
         const icon = L.divIcon({
             className: 'delivery-marker',
-            html: `<div style="background: ${iconColor}; width: 100%; height: 100%; border-radius: 50%;"></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            html: `<div style="background: ${iconColor}; width: 100%; height: 100%; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [24, 24], // Slightly larger for mobile
+            iconAnchor: [12, 12]
         });
 
         // Create popup content
@@ -112,9 +170,14 @@ class BostonTrackerMap {
             </div>
         `;
 
-        // Create marker
+        // Create marker with mobile-friendly popup options
         const marker = L.marker([lat, lng], { icon })
-            .bindPopup(popupContent)
+            .bindPopup(popupContent, {
+                maxWidth: 250,
+                closeButton: true,
+                autoClose: true,
+                closeOnEscapeKey: true
+            })
             .addTo(this.map);
 
         // Add click event
@@ -132,7 +195,7 @@ class BostonTrackerMap {
         
         const polyline = L.polyline(delivery.route, {
             color: routeColor,
-            weight: 3,
+            weight: 4, // Slightly thicker for mobile
             opacity: 0.7,
             dashArray: delivery.status === 'entregado' ? '10, 5' : null
         }).addTo(this.map);
@@ -147,8 +210,13 @@ class BostonTrackerMap {
         this.markers.forEach((marker, id) => {
             const element = marker.getElement();
             if (element) {
-                element.style.transform = id === deliveryId ? 'scale(1.3)' : 'scale(1)';
-                element.style.zIndex = id === deliveryId ? '1000' : '999';
+                if (id === deliveryId) {
+                    element.style.transform = 'scale(1.3)';
+                    element.style.zIndex = '1000';
+                } else {
+                    element.style.transform = 'scale(1)';
+                    element.style.zIndex = '999';
+                }
             }
         });
 
@@ -158,7 +226,7 @@ class BostonTrackerMap {
         // Center map on selected delivery
         const delivery = window.mockData.deliveries.find(d => d.id === deliveryId);
         if (delivery && delivery.coordinates) {
-            this.map.setView(delivery.coordinates, 15);
+            this.map.setView(delivery.coordinates, Math.max(this.map.getZoom(), 15));
             
             // Open popup
             const marker = this.markers.get(deliveryId);
@@ -216,6 +284,13 @@ class BostonTrackerMap {
             });
         }, 5000); // Update every 5 seconds
     }
+
+    // Public method to force resize (useful for mobile)
+    invalidateSize() {
+        if (this.map) {
+            this.map.invalidateSize();
+        }
+    }
 }
 
 // Initialize map when DOM is loaded
@@ -229,4 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
             window.mapManager.startLiveUpdates();
         }, 3000);
     }, 500);
+});
+
+// Handle tab switching to refresh map
+document.addEventListener('shown.bs.tab', (e) => {
+    if (e.target.getAttribute('data-bs-target') === '#tracking') {
+        setTimeout(() => {
+            if (window.mapManager) {
+                window.mapManager.invalidateSize();
+            }
+        }, 100);
+    }
 });
